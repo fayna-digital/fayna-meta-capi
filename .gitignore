@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+*.egg-info/
+.vscode/
+.idea/
+*.swp
+*.swo
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+uv.lock

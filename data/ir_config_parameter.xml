@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--
+          Feature flag per CAMPSCOUT_MASTER_TZ.md §4.6 ЗАКОН + §2 Strangler Fig.
+          Default False keeps the module inert so any prior behaviour owning
+          the same domain keeps working until the intentional flip.
+        -->
+        <record id="ir_config_parameter_fayna_meta_capi_active" model="ir.config_parameter">
+            <field name="key">fayna_meta_capi.active</field>
+            <field name="value">False</field>
+        </record>
+
+    </data>
+</odoo>
