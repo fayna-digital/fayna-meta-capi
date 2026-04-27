@@ -1,0 +1,68 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# * fayna_meta_capi
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 17.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-27 00:00+0000\n"
+"PO-Revision-Date: 2026-04-27 00:00+0000\n"
+"Last-Translator: Fayna Digital <admin@fayna.agency>\n"
+"Language-Team: Ukrainian\n"
+"Language: uk_UA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: fayna_meta_capi
+msgid "Currency"
+msgstr "Валюта"
+
+#. module: fayna_meta_capi
+msgid "Error detail"
+msgstr "Деталі помилки"
+
+#. module: fayna_meta_capi
+msgid "Event ID (deduplicate)"
+msgstr "ID події (дедуплікація)"
+
+#. module: fayna_meta_capi
+msgid "Event Log"
+msgstr "Журнал подій"
+
+#. module: fayna_meta_capi
+msgid "Event name"
+msgstr "Назва події"
+
+#. module: fayna_meta_capi
+msgid "Event time"
+msgstr "Час події"
+
+#. module: fayna_meta_capi
+msgid "Failed"
+msgstr "Помилка"
+
+#. module: fayna_meta_capi
+msgid "HTTP status code"
+msgstr "HTTP код відповіді"
+
+#. module: fayna_meta_capi
+msgid "Meta CAPI Event Log"
+msgstr "Журнал подій Meta CAPI"
+
+#. module: fayna_meta_capi
+msgid "No events logged yet."
+msgstr "Подій ще не зафіксовано."
+
+#. module: fayna_meta_capi
+msgid "Order total"
+msgstr "Сума замовлення"
+
+#. module: fayna_meta_capi
+msgid "Sent"
+msgstr "Надіслано"
+
+#. module: fayna_meta_capi
+msgid "Skipped"
+msgstr "Пропущено"

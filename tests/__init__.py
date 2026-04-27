@@ -1,1 +1,1 @@
-from . import test_scaffold
+from . import test_fayna_meta_capi, test_scaffold

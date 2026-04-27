@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree view -->
+    <record id="view_fayna_capi_event_log_tree" model="ir.ui.view">
+        <field name="name">fayna.capi.event.log.tree</field>
+        <field name="model">fayna.capi.event.log</field>
+        <field name="arch" type="xml">
+            <tree string="Meta CAPI Event Log" create="false" edit="false" delete="false">
+                <field name="create_date" string="Date"/>
+                <field name="event_name"/>
+                <field name="status"
+                       decoration-success="status == 'sent'"
+                       decoration-danger="status == 'failed'"
+                       decoration-muted="status == 'skipped'"/>
+                <field name="order_amount"/>
+                <field name="currency_code"/>
+                <field name="http_status"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form view -->
+    <record id="view_fayna_capi_event_log_form" model="ir.ui.view">
+        <field name="name">fayna.capi.event.log.form</field>
+        <field name="model">fayna.capi.event.log</field>
+        <field name="arch" type="xml">
+            <form string="Meta CAPI Event Log" create="false" edit="false" delete="false">
+                <sheet>
+                    <group>
+                        <group string="Event">
+                            <field name="event_name" readonly="1"/>
+                            <field name="event_time" readonly="1"/>
+                            <field name="external_id" readonly="1"/>
+                            <field name="status" readonly="1"/>
+                            <field name="http_status" readonly="1"/>
+                        </group>
+                        <group string="Order">
+                            <field name="sale_order_id" readonly="1"/>
+                            <field name="order_amount" readonly="1"/>
+                            <field name="currency_code" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Error detail" attrs="{'invisible': [('error_message', '=', False)]}">
+                        <field name="error_message" readonly="1" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search view -->
+    <record id="view_fayna_capi_event_log_search" model="ir.ui.view">
+        <field name="name">fayna.capi.event.log.search</field>
+        <field name="model">fayna.capi.event.log</field>
+        <field name="arch" type="xml">
+            <search string="Meta CAPI Event Log">
+                <field name="event_name"/>
+                <field name="sale_order_id"/>
+                <filter string="Sent" name="sent" domain="[('status', '=', 'sent')]"/>
+                <filter string="Failed" name="failed" domain="[('status', '=', 'failed')]"/>
+                <filter string="Skipped" name="skipped" domain="[('status', '=', 'skipped')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="Event" name="group_event" context="{'group_by': 'event_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Window action -->
+    <record id="action_fayna_capi_event_log" model="ir.actions.act_window">
+        <field name="name">Meta CAPI Event Log</field>
+        <field name="res_model">fayna.capi.event.log</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_fayna_capi_event_log_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No events logged yet.
+            </p>
+            <p>
+                Events are logged automatically when sale orders are confirmed
+                and the feature flag <code>fayna_meta_capi.active</code> is enabled.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu: Settings > Technical > Meta CAPI -->
+    <menuitem
+        id="menu_fayna_capi_root"
+        name="Meta CAPI"
+        parent="base_setup.action_general_configuration"
+        sequence="100"
+        groups="base.group_system"
+    />
+
+    <menuitem
+        id="menu_fayna_capi_event_log"
+        name="Event Log"
+        parent="menu_fayna_capi_root"
+        action="action_fayna_capi_event_log"
+        sequence="10"
+        groups="base.group_system"
+    />
+
+</odoo>

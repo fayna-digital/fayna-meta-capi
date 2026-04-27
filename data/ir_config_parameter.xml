@@ -7,9 +7,26 @@
           Default False keeps the module inert so any prior behaviour owning
           the same domain keeps working until the intentional flip.
         -->
-        <record id="ir_config_parameter_fayna_meta_capi_active" model="ir.config_parameter">
+        <record id="param_capi_active" model="ir.config_parameter">
             <field name="key">fayna_meta_capi.active</field>
             <field name="value">False</field>
+        </record>
+
+        <record id="param_capi_pixel_id" model="ir.config_parameter">
+            <field name="key">fayna_meta_capi.pixel_id</field>
+            <field name="value"></field>
+        </record>
+
+        <!-- #SECRETS: access_token stored in ir.config_parameter (admin-only).
+             Never log or display this value. -->
+        <record id="param_capi_access_token" model="ir.config_parameter">
+            <field name="key">fayna_meta_capi.access_token</field>
+            <field name="value"></field>
+        </record>
+
+        <record id="param_capi_test_code" model="ir.config_parameter">
+            <field name="key">fayna_meta_capi.test_event_code</field>
+            <field name="value"></field>
         </record>
 
     </data>
