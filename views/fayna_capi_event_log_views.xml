@@ -41,7 +41,7 @@
                             <field name="currency_code" readonly="1"/>
                         </group>
                     </group>
-                    <group string="Error detail" attrs="{'invisible': [('error_message', '=', False)]}">
+                    <group string="Error detail" invisible="not error_message">
                         <field name="error_message" readonly="1" nolabel="1"/>
                     </group>
                 </sheet>
