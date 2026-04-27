@@ -16,8 +16,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. module: fayna_meta_capi
+msgid "Access Token"
+msgstr "Token dostępu"
+
+#. module: fayna_meta_capi
+msgid "API Version"
+msgstr "Wersja API"
+
+#. module: fayna_meta_capi
 msgid "Currency"
 msgstr "Waluta"
+
+#. module: fayna_meta_capi
+msgid "Enable Meta CAPI"
+msgstr "Włącz Meta CAPI"
 
 #. module: fayna_meta_capi
 msgid "Error detail"
@@ -44,8 +56,16 @@ msgid "Failed"
 msgstr "Niepowodzenie"
 
 #. module: fayna_meta_capi
+msgid "Feature flag is disabled. Enable it first."
+msgstr "Funkcja jest wyłączona. Najpierw ją włącz."
+
+#. module: fayna_meta_capi
 msgid "HTTP status code"
 msgstr "Kod statusu HTTP"
+
+#. module: fayna_meta_capi
+msgid "Meta CAPI"
+msgstr "Meta CAPI"
 
 #. module: fayna_meta_capi
 msgid "Meta CAPI Event Log"
@@ -60,9 +80,33 @@ msgid "Order total"
 msgstr "Suma zamówienia"
 
 #. module: fayna_meta_capi
+msgid "Pixel ID"
+msgstr "Pixel ID"
+
+#. module: fayna_meta_capi
+msgid "Pixel ID and Access Token must be set before testing."
+msgstr "Przed testowaniem należy podać Pixel ID i token dostępu."
+
+#. module: fayna_meta_capi
+msgid "Send test event"
+msgstr "Wyślij zdarzenie testowe"
+
+#. module: fayna_meta_capi
 msgid "Sent"
 msgstr "Wysłano"
 
 #. module: fayna_meta_capi
 msgid "Skipped"
 msgstr "Pominięto"
+
+#. module: fayna_meta_capi
+msgid "Test Event Code"
+msgstr "Kod zdarzenia testowego"
+
+#. module: fayna_meta_capi
+msgid "Test event failed — check the Event Log for details."
+msgstr "Zdarzenie testowe nie zostało wysłane — sprawdź dziennik zdarzeń."
+
+#. module: fayna_meta_capi
+msgid "Test ViewContent event sent successfully."
+msgstr "Testowe zdarzenie ViewContent zostało wysłane pomyślnie."

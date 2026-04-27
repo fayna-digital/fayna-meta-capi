@@ -16,6 +16,7 @@
                 <field name="order_amount"/>
                 <field name="currency_code"/>
                 <field name="http_status"/>
+                <field name="sale_order_id"/>
             </tree>
         </field>
     </record>
@@ -80,16 +81,16 @@
             </p>
             <p>
                 Events are logged automatically when sale orders are confirmed
-                and the feature flag <code>fayna_meta_capi.active</code> is enabled.
+                and the feature flag <code>fayna_meta_capi.enabled</code> is enabled.
             </p>
         </field>
     </record>
 
-    <!-- Menu: Settings > Technical > Meta CAPI -->
+    <!-- Menu: Technical > Meta CAPI (admin-only) -->
     <menuitem
         id="menu_fayna_capi_root"
         name="Meta CAPI"
-        parent="base_setup.action_general_configuration"
+        parent="base.menu_administration"
         sequence="100"
         groups="base.group_system"
     />

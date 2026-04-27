@@ -16,8 +16,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. module: fayna_meta_capi
+msgid "Access Token"
+msgstr "Токен доступу"
+
+#. module: fayna_meta_capi
+msgid "API Version"
+msgstr "Версія API"
+
+#. module: fayna_meta_capi
 msgid "Currency"
 msgstr "Валюта"
+
+#. module: fayna_meta_capi
+msgid "Enable Meta CAPI"
+msgstr "Увімкнути Meta CAPI"
 
 #. module: fayna_meta_capi
 msgid "Error detail"
@@ -44,8 +56,16 @@ msgid "Failed"
 msgstr "Помилка"
 
 #. module: fayna_meta_capi
+msgid "Feature flag is disabled. Enable it first."
+msgstr "Функцію вимкнено. Спочатку увімкніть її."
+
+#. module: fayna_meta_capi
 msgid "HTTP status code"
 msgstr "HTTP код відповіді"
+
+#. module: fayna_meta_capi
+msgid "Meta CAPI"
+msgstr "Meta CAPI"
 
 #. module: fayna_meta_capi
 msgid "Meta CAPI Event Log"
@@ -60,9 +80,33 @@ msgid "Order total"
 msgstr "Сума замовлення"
 
 #. module: fayna_meta_capi
+msgid "Pixel ID"
+msgstr "Pixel ID"
+
+#. module: fayna_meta_capi
+msgid "Pixel ID and Access Token must be set before testing."
+msgstr "Перед тестуванням необхідно вказати Pixel ID та токен доступу."
+
+#. module: fayna_meta_capi
+msgid "Send test event"
+msgstr "Надіслати тестову подію"
+
+#. module: fayna_meta_capi
 msgid "Sent"
 msgstr "Надіслано"
 
 #. module: fayna_meta_capi
 msgid "Skipped"
 msgstr "Пропущено"
+
+#. module: fayna_meta_capi
+msgid "Test Event Code"
+msgstr "Код тестової події"
+
+#. module: fayna_meta_capi
+msgid "Test event failed — check the Event Log for details."
+msgstr "Тестова подія не надіслана — перевірте журнал подій."
+
+#. module: fayna_meta_capi
+msgid "Test ViewContent event sent successfully."
+msgstr "Тестова подія ViewContent успішно надіслана."

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Settings form (res.config.settings extension) ──────────────── -->
+    <record id="res_config_settings_view_form_meta_capi" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.meta.capi</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Meta CAPI" string="Meta CAPI"
+                     data-key="fayna_meta_capi" groups="base.group_system">
+                    <h2>Meta Conversions API</h2>
+                    <div class="row mt16 o_settings_container" id="meta_capi_settings">
+
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="fayna_capi_enabled"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="fayna_capi_enabled" string="Enable Meta CAPI"/>
+                                <div class="text-muted">
+                                    Server-side conversion tracking (survives ad blockers, iOS 14.5+).
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label string="Pixel ID" for="fayna_capi_pixel_id"/>
+                                <field name="fayna_capi_pixel_id" class="o_light_label"
+                                       placeholder="123456789012345"/>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label string="Access Token" for="fayna_capi_access_token"/>
+                                <field name="fayna_capi_access_token" class="o_light_label"
+                                       password="True"
+                                       placeholder="EAAxxxxxx"/>
+                                <div class="text-muted">
+                                    From Meta Events Manager &#x2192; Settings &#x2192; Conversions API.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label string="API Version" for="fayna_capi_api_version"/>
+                                <field name="fayna_capi_api_version" class="o_light_label"
+                                       placeholder="v19.0"/>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label string="Test Event Code" for="fayna_capi_test_event_code"/>
+                                <field name="fayna_capi_test_event_code" class="o_light_label"
+                                       placeholder="TEST12345 (leave empty on production)"/>
+                                <div class="text-muted">
+                                    From Meta Events Manager Test Events tab. Leave empty on production.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <button name="action_send_test_capi_event" type="object"
+                                        string="Send test event" class="btn btn-secondary mt8"
+                                        groups="base.group_system"/>
+                                <div class="text-muted">
+                                    Sends a test ViewContent event. Check Meta Events Manager
+                                    Test Events tab (may take up to 60 s to appear).
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

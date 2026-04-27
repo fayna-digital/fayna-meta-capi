@@ -1,8 +1,8 @@
+"""Override sale.order to fire Meta CAPI Purchase event on confirmation."""
+
 import logging
 
 from odoo import models
-
-from .fayna_capi_service import FaynaCAPIService
 
 _logger = logging.getLogger(__name__)
 
@@ -13,8 +13,6 @@ class SaleOrder(models.Model):
     def action_confirm(self):
         result = super().action_confirm()
         for order in self:
-            try:
-                FaynaCAPIService(self.env).send_purchase(order)
-            except Exception:
-                _logger.exception("Meta CAPI send_purchase failed for order %s", order.name)
+            # CAPI failure must NEVER block checkout — fully isolated.
+            self.env["fayna.meta.capi"].send_purchase(order)
         return result
