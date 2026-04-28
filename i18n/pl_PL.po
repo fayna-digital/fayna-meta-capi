@@ -16,12 +16,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. module: fayna_meta_capi
-msgid "Access Token"
-msgstr "Token dostępu"
-
-#. module: fayna_meta_capi
 msgid "API Version"
 msgstr "Wersja API"
+
+#. module: fayna_meta_capi
+msgid "Access Token"
+msgstr "Token dostępu"
 
 #. module: fayna_meta_capi
 msgid "Currency"
@@ -64,12 +64,24 @@ msgid "HTTP status code"
 msgstr "Kod statusu HTTP"
 
 #. module: fayna_meta_capi
+msgid "Meta API response (JSON)"
+msgstr "Odpowiedź Meta API (JSON)"
+
+#. module: fayna_meta_capi
 msgid "Meta CAPI"
-msgstr "Meta CAPI"
+msgstr ""
 
 #. module: fayna_meta_capi
 msgid "Meta CAPI Event Log"
 msgstr "Dziennik zdarzeń Meta CAPI"
+
+#. module: fayna_meta_capi
+msgid "Meta CAPI — Retry failed events"
+msgstr "Meta CAPI — Ponowne wysyłanie nieudanych zdarzeń"
+
+#. module: fayna_meta_capi
+msgid "Next retry at"
+msgstr "Następna próba o"
 
 #. module: fayna_meta_capi
 msgid "No events logged yet."
@@ -80,20 +92,28 @@ msgid "Order total"
 msgstr "Suma zamówienia"
 
 #. module: fayna_meta_capi
-msgid "Meta API response (JSON)"
-msgstr "Odpowiedź Meta API (JSON)"
+msgid "Pixel ID"
+msgstr ""
 
 #. module: fayna_meta_capi
-msgid "Pixel ID"
-msgstr "Pixel ID"
+msgid "Pixel ID and Access Token must be set before testing."
+msgstr "Przed testowaniem należy podać Pixel ID i token dostępu."
 
 #. module: fayna_meta_capi
 msgid "Request payload (JSON)"
 msgstr "Dane żądania do Meta API (JSON)"
 
 #. module: fayna_meta_capi
-msgid "Pixel ID and Access Token must be set before testing."
-msgstr "Przed testowaniem należy podać Pixel ID i token dostępu."
+msgid "Retries"
+msgstr "Ponowne próby"
+
+#. module: fayna_meta_capi
+msgid "Retry count"
+msgstr "Liczba ponownych prób"
+
+#. module: fayna_meta_capi
+msgid "Retry now"
+msgstr "Ponów teraz"
 
 #. module: fayna_meta_capi
 msgid "Send test event"
@@ -112,29 +132,9 @@ msgid "Test Event Code"
 msgstr "Kod zdarzenia testowego"
 
 #. module: fayna_meta_capi
-msgid "Test event failed — check the Event Log for details."
-msgstr "Zdarzenie testowe nie zostało wysłane — sprawdź dziennik zdarzeń."
-
-#. module: fayna_meta_capi
 msgid "Test ViewContent event sent successfully."
 msgstr "Testowe zdarzenie ViewContent zostało wysłane pomyślnie."
 
 #. module: fayna_meta_capi
-msgid "Retry count"
-msgstr "Liczba ponownych prób"
-
-#. module: fayna_meta_capi
-msgid "Retries"
-msgstr "Ponowne próby"
-
-#. module: fayna_meta_capi
-msgid "Next retry at"
-msgstr "Następna próba o"
-
-#. module: fayna_meta_capi
-msgid "Retry now"
-msgstr "Ponów teraz"
-
-#. module: fayna_meta_capi
-msgid "Meta CAPI — Retry failed events"
-msgstr "Meta CAPI — Ponowne wysyłanie nieudanych zdarzeń"
+msgid "Test event failed — check the Event Log for details."
+msgstr "Zdarzenie testowe nie zostało wysłane — sprawdź dziennik zdarzeń."

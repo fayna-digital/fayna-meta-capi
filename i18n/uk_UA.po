@@ -16,12 +16,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. module: fayna_meta_capi
-msgid "Access Token"
-msgstr "Токен доступу"
-
-#. module: fayna_meta_capi
 msgid "API Version"
 msgstr "Версія API"
+
+#. module: fayna_meta_capi
+msgid "Access Token"
+msgstr "Токен доступу"
 
 #. module: fayna_meta_capi
 msgid "Currency"
@@ -64,12 +64,24 @@ msgid "HTTP status code"
 msgstr "HTTP код відповіді"
 
 #. module: fayna_meta_capi
+msgid "Meta API response (JSON)"
+msgstr "Відповідь Meta API (JSON)"
+
+#. module: fayna_meta_capi
 msgid "Meta CAPI"
-msgstr "Meta CAPI"
+msgstr ""
 
 #. module: fayna_meta_capi
 msgid "Meta CAPI Event Log"
 msgstr "Журнал подій Meta CAPI"
+
+#. module: fayna_meta_capi
+msgid "Meta CAPI — Retry failed events"
+msgstr "Meta CAPI — Повторне надсилання хибних подій"
+
+#. module: fayna_meta_capi
+msgid "Next retry at"
+msgstr "Наступна спроба о"
 
 #. module: fayna_meta_capi
 msgid "No events logged yet."
@@ -80,20 +92,28 @@ msgid "Order total"
 msgstr "Сума замовлення"
 
 #. module: fayna_meta_capi
-msgid "Meta API response (JSON)"
-msgstr "Відповідь Meta API (JSON)"
+msgid "Pixel ID"
+msgstr ""
 
 #. module: fayna_meta_capi
-msgid "Pixel ID"
-msgstr "Pixel ID"
+msgid "Pixel ID and Access Token must be set before testing."
+msgstr "Перед тестуванням необхідно вказати Pixel ID та токен доступу."
 
 #. module: fayna_meta_capi
 msgid "Request payload (JSON)"
 msgstr "Запит до Meta API (JSON)"
 
 #. module: fayna_meta_capi
-msgid "Pixel ID and Access Token must be set before testing."
-msgstr "Перед тестуванням необхідно вказати Pixel ID та токен доступу."
+msgid "Retries"
+msgstr "Повторні спроби"
+
+#. module: fayna_meta_capi
+msgid "Retry count"
+msgstr "Кількість повторних спроб"
+
+#. module: fayna_meta_capi
+msgid "Retry now"
+msgstr "Повторити зараз"
 
 #. module: fayna_meta_capi
 msgid "Send test event"
@@ -112,29 +132,9 @@ msgid "Test Event Code"
 msgstr "Код тестової події"
 
 #. module: fayna_meta_capi
-msgid "Test event failed — check the Event Log for details."
-msgstr "Тестова подія не надіслана — перевірте журнал подій."
-
-#. module: fayna_meta_capi
 msgid "Test ViewContent event sent successfully."
 msgstr "Тестова подія ViewContent успішно надіслана."
 
 #. module: fayna_meta_capi
-msgid "Retry count"
-msgstr "Кількість повторних спроб"
-
-#. module: fayna_meta_capi
-msgid "Retries"
-msgstr "Повторні спроби"
-
-#. module: fayna_meta_capi
-msgid "Next retry at"
-msgstr "Наступна спроба о"
-
-#. module: fayna_meta_capi
-msgid "Retry now"
-msgstr "Повторити зараз"
-
-#. module: fayna_meta_capi
-msgid "Meta CAPI — Retry failed events"
-msgstr "Meta CAPI — Повторне надсилання хибних подій"
+msgid "Test event failed — check the Event Log for details."
+msgstr "Тестова подія не надіслана — перевірте журнал подій."
