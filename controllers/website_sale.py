@@ -21,7 +21,11 @@ class FaynaMetaCapiWebsiteSale(WebsiteSale):
         try:
             partner = request.env.user.partner_id
             source_url = request.httprequest.url
-            request.env["fayna.meta.capi"].send_view_content(partner, product, source_url)
+            request.env["fayna.meta.capi"].send_view_content(
+                partner, product, source_url, http_request=request
+            )
         except Exception:
-            _logger.exception("Meta CAPI ViewContent failed for product %s", getattr(product, "id", "?"))
+            _logger.exception(
+                "Meta CAPI ViewContent failed for product %s", getattr(product, "id", "?")
+            )
         return response

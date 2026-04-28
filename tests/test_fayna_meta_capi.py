@@ -3,7 +3,8 @@ Tests for fayna_meta_capi — Meta Conversions API adapter.
 
 All HTTP calls are mocked via unittest.mock.patch; no real network traffic.
 Tests cover: AbstractModel API, payload construction, hashing, feature-flag
-gating, Purchase/Lead/ViewContent events, timeout handling, log creation.
+gating, Purchase/Lead/ViewContent events, timeout handling, log creation,
+external_id in user_data, retry cron logic.
 """
 
 import hashlib
@@ -58,17 +59,15 @@ class TestFaynaCAPIBase(TransactionCase):
 
 # ── Test 1: log status=sent on HTTP 200 ─────────────────────────────────────
 
-class TestPurchaseEvent(TestFaynaCAPIBase):
 
+class TestPurchaseEvent(TestFaynaCAPIBase):
     def test_01_log_created_status_sent_on_http_200(self):
         order = self._make_order()
         with patch(_PATCH) as mock_post:
             mock_post.return_value = self._mock_response(200)
             order.action_confirm()
 
-        log = self.env["fayna.capi.event.log"].search(
-            [("sale_order_id", "=", order.id)], limit=1
-        )
+        log = self.env["fayna.capi.event.log"].search([("sale_order_id", "=", order.id)], limit=1)
         self.assertTrue(log, "Log record must be created")
         self.assertEqual(log.status, "sent")
         self.assertEqual(log.http_status, 200)
@@ -82,9 +81,7 @@ class TestPurchaseEvent(TestFaynaCAPIBase):
             mock_post.return_value = self._mock_response(400, "Bad Request")
             order.action_confirm()
 
-        log = self.env["fayna.capi.event.log"].search(
-            [("sale_order_id", "=", order.id)], limit=1
-        )
+        log = self.env["fayna.capi.event.log"].search([("sale_order_id", "=", order.id)], limit=1)
         self.assertTrue(log)
         self.assertEqual(log.status, "failed")
         self.assertEqual(log.http_status, 400)
@@ -100,9 +97,7 @@ class TestPurchaseEvent(TestFaynaCAPIBase):
             mock_post.side_effect = req_lib.RequestException("Connection refused")
             order.action_confirm()
 
-        log = self.env["fayna.capi.event.log"].search(
-            [("sale_order_id", "=", order.id)], limit=1
-        )
+        log = self.env["fayna.capi.event.log"].search([("sale_order_id", "=", order.id)], limit=1)
         self.assertTrue(log)
         self.assertEqual(log.status, "failed")
         self.assertEqual(log.http_status, 0)
@@ -180,9 +175,7 @@ class TestPurchaseEvent(TestFaynaCAPIBase):
             payload = mock_post.call_args[1]["json"]
             self.assertEqual(payload["data"][0]["event_name"], "Purchase")
 
-        log = self.env["fayna.capi.event.log"].search(
-            [("sale_order_id", "=", order.id)], limit=1
-        )
+        log = self.env["fayna.capi.event.log"].search([("sale_order_id", "=", order.id)], limit=1)
         self.assertTrue(log)
         self.assertEqual(log.status, "sent")
         self.assertEqual(log.event_name, "Purchase")
@@ -190,8 +183,8 @@ class TestPurchaseEvent(TestFaynaCAPIBase):
 
 # ── Test 8–11: hashing helpers ───────────────────────────────────────────────
 
-class TestHashingHelpers(TestFaynaCAPIBase):
 
+class TestHashingHelpers(TestFaynaCAPIBase):
     def _svc(self):
         return self.env["fayna.meta.capi"]
 
@@ -238,8 +231,8 @@ class TestHashingHelpers(TestFaynaCAPIBase):
 
 # ── Test 13: Lead event ───────────────────────────────────────────────────────
 
-class TestLeadEvent(TestFaynaCAPIBase):
 
+class TestLeadEvent(TestFaynaCAPIBase):
     def test_13_send_lead_creates_log_with_status_sent(self):
         partner = self.env["res.partner"].create(
             {"name": "Lead Partner", "email": "lead@campscout.eu"}
@@ -258,12 +251,10 @@ class TestLeadEvent(TestFaynaCAPIBase):
 
 # ── Test 14: ViewContent event ────────────────────────────────────────────────
 
-class TestViewContentEvent(TestFaynaCAPIBase):
 
+class TestViewContentEvent(TestFaynaCAPIBase):
     def test_14_send_view_content_creates_log_with_status_sent(self):
-        partner = self.env["res.partner"].create(
-            {"name": "Viewer", "email": "view@campscout.eu"}
-        )
+        partner = self.env["res.partner"].create({"name": "Viewer", "email": "view@campscout.eu"})
         product = self.env["product.product"].create(
             {"name": "Camp PSH", "type": "service", "list_price": 1200.0}
         )
@@ -283,8 +274,8 @@ class TestViewContentEvent(TestFaynaCAPIBase):
 
 # ── Test 15: get_config returns correct keys ─────────────────────────────────
 
-class TestGetConfig(TestFaynaCAPIBase):
 
+class TestGetConfig(TestFaynaCAPIBase):
     def test_15_get_config_returns_all_keys(self):
         cfg = self.env["fayna.meta.capi"]._get_config()
         self.assertIn("pixel_id", cfg)
@@ -299,8 +290,8 @@ class TestGetConfig(TestFaynaCAPIBase):
 
 # ── Test 16: test_event_code injected into payload ───────────────────────────
 
-class TestTestEventCode(TestFaynaCAPIBase):
 
+class TestTestEventCode(TestFaynaCAPIBase):
     def test_16_test_event_code_injected_into_payload(self):
         self.env["ir.config_parameter"].sudo().set_param(
             "fayna_meta_capi.test_event_code", "TEST99999"
@@ -313,20 +304,16 @@ class TestTestEventCode(TestFaynaCAPIBase):
                 payload = mock_post.call_args[1]["json"]
                 self.assertEqual(payload.get("test_event_code"), "TEST99999")
         finally:
-            self.env["ir.config_parameter"].sudo().set_param(
-                "fayna_meta_capi.test_event_code", ""
-            )
+            self.env["ir.config_parameter"].sudo().set_param("fayna_meta_capi.test_event_code", "")
 
 
 # ── Test 17: send_event generic API ──────────────────────────────────────────
 
-class TestSendEventGenericAPI(TestFaynaCAPIBase):
 
+class TestSendEventGenericAPI(TestFaynaCAPIBase):
     def test_17_send_event_returns_true_on_200(self):
         svc = self.env["fayna.meta.capi"]
-        partner = self.env["res.partner"].create(
-            {"name": "Generic", "email": "generic@test.com"}
-        )
+        partner = self.env["res.partner"].create({"name": "Generic", "email": "generic@test.com"})
         user_data = svc._build_user_data(partner)
         custom_data = {"currency": "PLN", "value": 100.0}
         with patch(_PATCH) as mock_post:
@@ -337,8 +324,8 @@ class TestSendEventGenericAPI(TestFaynaCAPIBase):
 
 # ── Test 18-20: payload + response stored in log ──────────────────────────────
 
-class TestLogPayloadAndResponse(TestFaynaCAPIBase):
 
+class TestLogPayloadAndResponse(TestFaynaCAPIBase):
     def test_18_log_stores_payload_json_on_success(self):
         """Log record must contain the JSON payload sent to Meta (without access_token)."""
         import json as _json
@@ -348,9 +335,7 @@ class TestLogPayloadAndResponse(TestFaynaCAPIBase):
             mock_post.return_value = self._mock_response(200, '{"events_received": 1}')
             order.action_confirm()
 
-        log = self.env["fayna.capi.event.log"].search(
-            [("sale_order_id", "=", order.id)], limit=1
-        )
+        log = self.env["fayna.capi.event.log"].search([("sale_order_id", "=", order.id)], limit=1)
         self.assertTrue(log)
         self.assertTrue(log.payload, "payload field must be set")
         parsed = _json.loads(log.payload)
@@ -368,25 +353,21 @@ class TestLogPayloadAndResponse(TestFaynaCAPIBase):
             mock_post.return_value = self._mock_response(200, meta_response)
             order.action_confirm()
 
-        log = self.env["fayna.capi.event.log"].search(
-            [("sale_order_id", "=", order.id)], limit=1
-        )
+        log = self.env["fayna.capi.event.log"].search([("sale_order_id", "=", order.id)], limit=1)
         self.assertTrue(log)
         self.assertEqual(log.response, meta_response)
 
     def test_20_log_stores_payload_on_network_error(self):
         """Even on network error, the payload we tried to send must be in the log."""
-        import json as _json
-        import requests as req_lib
+        import json as _json  # noqa: PLC0415, I001
+        import requests as req_lib  # noqa: PLC0415
 
         order = self._make_order(email="neterr@test.com")
         with patch(_PATCH) as mock_post:
             mock_post.side_effect = req_lib.ConnectionError("timeout")
             order.action_confirm()
 
-        log = self.env["fayna.capi.event.log"].search(
-            [("sale_order_id", "=", order.id)], limit=1
-        )
+        log = self.env["fayna.capi.event.log"].search([("sale_order_id", "=", order.id)], limit=1)
         self.assertTrue(log)
         self.assertEqual(log.status, "failed")
         self.assertTrue(log.payload, "payload must be stored even on network error")
@@ -397,16 +378,16 @@ class TestLogPayloadAndResponse(TestFaynaCAPIBase):
 
 # ── Test 21: settings config round-trip ──────────────────────────────────────
 
-class TestSettingsConfigRoundTrip(TestFaynaCAPIBase):
 
+class TestSettingsConfigRoundTrip(TestFaynaCAPIBase):
     def test_21_config_params_round_trip(self):
         """ir.config_parameter values must survive write → read cycle."""
-        ICP = self.env["ir.config_parameter"].sudo()
-        ICP.set_param("fayna_meta_capi.pixel_id", "999888777666555")
-        ICP.set_param("fayna_meta_capi.access_token", "EAATestTokenRoundTrip")
-        ICP.set_param("fayna_meta_capi.test_event_code", "TESTRT42")
-        ICP.set_param("fayna_meta_capi.api_version", "v18.0")
-        ICP.set_param("fayna_meta_capi.enabled", "True")
+        icp = self.env["ir.config_parameter"].sudo()
+        icp.set_param("fayna_meta_capi.pixel_id", "999888777666555")
+        icp.set_param("fayna_meta_capi.access_token", "EAATestTokenRoundTrip")
+        icp.set_param("fayna_meta_capi.test_event_code", "TESTRT42")
+        icp.set_param("fayna_meta_capi.api_version", "v18.0")
+        icp.set_param("fayna_meta_capi.enabled", "True")
         try:
             cfg = self.env["fayna.meta.capi"]._get_config()
             self.assertEqual(cfg["pixel_id"], "999888777666555")
@@ -415,16 +396,16 @@ class TestSettingsConfigRoundTrip(TestFaynaCAPIBase):
             self.assertEqual(cfg["api_version"], "v18.0")
             self.assertTrue(cfg["enabled"])
         finally:
-            ICP.set_param("fayna_meta_capi.pixel_id", "TEST_PIXEL_123")
-            ICP.set_param("fayna_meta_capi.access_token", "TEST_TOKEN_ABC")
-            ICP.set_param("fayna_meta_capi.test_event_code", "")
-            ICP.set_param("fayna_meta_capi.api_version", "v19.0")
+            icp.set_param("fayna_meta_capi.pixel_id", "TEST_PIXEL_123")
+            icp.set_param("fayna_meta_capi.access_token", "TEST_TOKEN_ABC")
+            icp.set_param("fayna_meta_capi.test_event_code", "")
+            icp.set_param("fayna_meta_capi.api_version", "v19.0")
 
 
 # ── Test 22: access_token never appears in URL ────────────────────────────────
 
-class TestSecurityInvariants(TestFaynaCAPIBase):
 
+class TestSecurityInvariants(TestFaynaCAPIBase):
     def test_22_access_token_not_in_request_url(self):
         """access_token must go in JSON body only, never in the URL."""
         order = self._make_order(email="sec@test.com")
@@ -437,3 +418,76 @@ class TestSecurityInvariants(TestFaynaCAPIBase):
             # access_token must be present in body json
             body = mock_post.call_args[1]["json"]
             self.assertEqual(body["access_token"], "TEST_TOKEN_ABC")
+
+
+# ── Test 23: external_id (SHA-256 of partner.id) present in user_data ─────────
+
+
+class TestExternalIdInUserData(TestFaynaCAPIBase):
+    def test_23_external_id_hashed_partner_id_in_user_data(self):
+        """user_data must include external_id = SHA-256(str(partner.id))."""
+        svc = self.env["fayna.meta.capi"]
+        partner = self.env["res.partner"].create(
+            {"name": "ExtID Test", "email": "extid@campscout.eu"}
+        )
+        data = svc._build_user_data(partner)
+        self.assertIn("external_id", data)
+        expected = _sha256(str(partner.id))
+        self.assertEqual(data["external_id"], [expected])
+
+    def test_24_external_id_present_in_purchase_payload(self):
+        """Purchase payload sent to Meta must contain user_data.external_id."""
+        order = self._make_order(email="extid_purchase@test.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            order.action_confirm()
+
+        payload = mock_post.call_args[1]["json"]
+        user_data = payload["data"][0]["user_data"]
+        self.assertIn("external_id", user_data)
+        self.assertTrue(user_data["external_id"], "external_id must be non-empty list")
+
+
+# ── Test 25–26: retry cron logic ──────────────────────────────────────────────
+
+
+class TestRetryCron(TestFaynaCAPIBase):
+    def test_25_failed_log_retry_count_increments(self):
+        """action_retry_failed must increment retry_count on the log record."""
+        import requests as req_lib
+
+        order = self._make_order(email="retry@test.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.side_effect = req_lib.RequestException("timeout")
+            order.action_confirm()
+
+        log = self.env["fayna.capi.event.log"].search([("sale_order_id", "=", order.id)], limit=1)
+        self.assertTrue(log)
+        self.assertEqual(log.status, "failed")
+        self.assertEqual(log.retry_count, 0)
+
+        # Now retry — mock success
+        with patch(_PATCH) as mock_post2:
+            mock_post2.return_value = self._mock_response(200)
+            log.action_retry_failed()
+
+        self.assertEqual(log.retry_count, 1)
+
+    def test_26_cron_retry_stops_after_max_retries(self):
+        """cron must not retry a log record that already hit retry_count=3."""
+        import requests as req_lib
+
+        order = self._make_order(email="maxretry@test.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.side_effect = req_lib.RequestException("timeout")
+            order.action_confirm()
+
+        log = self.env["fayna.capi.event.log"].search([("sale_order_id", "=", order.id)], limit=1)
+        self.assertTrue(log)
+        # Fast-forward retry_count to max
+        log.sudo().write({"retry_count": 3})
+
+        with patch(_PATCH) as mock_post2:
+            self.env["fayna.capi.event.log"].cron_retry_failed_events()
+            # Must not have been called — already at max retries
+            mock_post2.assert_not_called()

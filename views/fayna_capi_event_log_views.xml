@@ -13,6 +13,7 @@
                        decoration-success="status == 'sent'"
                        decoration-danger="status == 'failed'"
                        decoration-muted="status == 'skipped'"/>
+                <field name="retry_count" string="Retries"/>
                 <field name="order_amount"/>
                 <field name="currency_code"/>
                 <field name="http_status"/>
@@ -27,6 +28,12 @@
         <field name="model">fayna.capi.event.log</field>
         <field name="arch" type="xml">
             <form string="Meta CAPI Event Log" create="false" edit="false" delete="false">
+                <header>
+                    <button name="action_retry_failed" type="object"
+                            string="Retry now" class="btn btn-primary"
+                            groups="base.group_system"
+                            invisible="status != 'failed'"/>
+                </header>
                 <sheet>
                     <group>
                         <group string="Event">
@@ -35,6 +42,9 @@
                             <field name="external_id" readonly="1"/>
                             <field name="status" readonly="1"/>
                             <field name="http_status" readonly="1"/>
+                            <field name="retry_count" readonly="1"/>
+                            <field name="next_retry_at" readonly="1"
+                                   invisible="status != 'failed'"/>
                         </group>
                         <group string="Order">
                             <field name="sale_order_id" readonly="1"/>

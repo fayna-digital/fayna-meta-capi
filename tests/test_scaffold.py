@@ -28,7 +28,7 @@ class TestScaffold(TransactionCase):
 
     def test_config_parameters_all_seeded(self):
         """All 5 ir.config_parameter keys must exist after module install."""
-        ICP = self.env["ir.config_parameter"].sudo()
+        icp = self.env["ir.config_parameter"].sudo()
         keys = [
             "fayna_meta_capi.enabled",
             "fayna_meta_capi.pixel_id",
@@ -37,5 +37,5 @@ class TestScaffold(TransactionCase):
             "fayna_meta_capi.test_event_code",
         ]
         for key in keys:
-            val = ICP.get_param(key)
+            val = icp.get_param(key)
             self.assertIsNotNone(val, f"ir.config_parameter {key!r} must be seeded")

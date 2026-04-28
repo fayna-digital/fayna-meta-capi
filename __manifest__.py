@@ -1,6 +1,6 @@
 {
     "name": "Fayna Meta Conversions API",
-    "version": "17.0.2.0.0",
+    "version": "17.0.3.0.0",
     "category": "Tools/Camp Management",
     "summary": "Meta Conversions API (server-side pixel) — Purchase/Lead/ViewContent events from Odoo",
     "description": """
@@ -33,6 +33,7 @@ TZ: fayna-digital-docs/contributing/CAMPSCOUT_MASTER_TZ.md §16 Phase 4
     "data": [
         "security/ir.model.access.csv",
         "data/ir_config_parameter.xml",
+        "data/cron_retry.xml",
         "views/fayna_capi_settings_views.xml",
         "views/fayna_capi_event_log_views.xml",
     ],

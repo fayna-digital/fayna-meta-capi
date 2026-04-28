@@ -118,3 +118,23 @@ msgstr "Тестова подія не надіслана — перевірте
 #. module: fayna_meta_capi
 msgid "Test ViewContent event sent successfully."
 msgstr "Тестова подія ViewContent успішно надіслана."
+
+#. module: fayna_meta_capi
+msgid "Retry count"
+msgstr "Кількість повторних спроб"
+
+#. module: fayna_meta_capi
+msgid "Retries"
+msgstr "Повторні спроби"
+
+#. module: fayna_meta_capi
+msgid "Next retry at"
+msgstr "Наступна спроба о"
+
+#. module: fayna_meta_capi
+msgid "Retry now"
+msgstr "Повторити зараз"
+
+#. module: fayna_meta_capi
+msgid "Meta CAPI — Retry failed events"
+msgstr "Meta CAPI — Повторне надсилання хибних подій"

@@ -24,6 +24,7 @@ class ResConfigSettings(models.TransientModel):
     fayna_capi_access_token = fields.Char(
         string="Access Token",
         config_parameter="fayna_meta_capi.access_token",
+        password=True,
     )
     fayna_capi_api_version = fields.Char(
         string="API Version",

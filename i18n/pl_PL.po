@@ -118,3 +118,23 @@ msgstr "Zdarzenie testowe nie zostało wysłane — sprawdź dziennik zdarzeń."
 #. module: fayna_meta_capi
 msgid "Test ViewContent event sent successfully."
 msgstr "Testowe zdarzenie ViewContent zostało wysłane pomyślnie."
+
+#. module: fayna_meta_capi
+msgid "Retry count"
+msgstr "Liczba ponownych prób"
+
+#. module: fayna_meta_capi
+msgid "Retries"
+msgstr "Ponowne próby"
+
+#. module: fayna_meta_capi
+msgid "Next retry at"
+msgstr "Następna próba o"
+
+#. module: fayna_meta_capi
+msgid "Retry now"
+msgstr "Ponów teraz"
+
+#. module: fayna_meta_capi
+msgid "Meta CAPI — Retry failed events"
+msgstr "Meta CAPI — Ponowne wysyłanie nieudanych zdarzeń"

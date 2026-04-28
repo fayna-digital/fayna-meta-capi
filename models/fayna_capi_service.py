@@ -111,13 +111,20 @@ class FaynaMetaCapiService(models.AbstractModel):
             return False
 
     @api.model
-    def send_view_content(self, partner, product, source_url: str = "") -> bool:
-        """Send ViewContent event when a visitor views a camp product page."""
+    def send_view_content(self, partner, product, source_url: str = "", http_request=None) -> bool:
+        """Send ViewContent event when a visitor views a camp product page.
+
+        Args:
+            partner: res.partner (may be public user partner).
+            product: product.product or product.template record.
+            source_url: full URL of the viewed page.
+            http_request: optional odoo.http.request for IP/UA extraction.
+        """
         try:
             event_id = f"view_{product.id}_{int(datetime.now().timestamp())}"
             user_data = {}
             if partner and partner != self.env.ref("base.public_partner", raise_if_not_found=False):
-                user_data = self._build_user_data(partner)
+                user_data = self._build_user_data(partner, http_request=http_request)
             custom_data = {
                 "content_name": product.name or "",
                 "content_ids": [str(product.id)],
@@ -220,8 +227,23 @@ class FaynaMetaCapiService(models.AbstractModel):
         return bool(cfg["pixel_id"] and cfg["access_token"] and cfg["enabled"])
 
     @api.model
-    def _build_user_data(self, partner) -> dict:
-        """Build hashed user_data dict from res.partner."""
+    def _build_user_data(self, partner, http_request=None) -> dict:
+        """Build hashed user_data dict from res.partner.
+
+        Args:
+            partner: res.partner record.
+            http_request: optional odoo.http.request (or werkzeug Request)
+                used to extract client_ip_address and client_user_agent.
+                Pass ``odoo.http.request`` when calling from a controller.
+
+        Meta CAPI required/recommended fields:
+            em  — hashed email
+            ph  — hashed phone (digits + leading '+' only)
+            external_id — SHA-256(str(partner.id)), used for deduplication
+                across server-side and browser-side events
+            client_ip_address  — taken from X-Forwarded-For or REMOTE_ADDR
+            client_user_agent  — taken from User-Agent header
+        """
         data: dict = {}
         if partner and partner.email:
             hashed = self._hash_value(partner.email)
@@ -233,6 +255,34 @@ class FaynaMetaCapiService(models.AbstractModel):
             hashed = self._hash_value(phone_normalized)
             if hashed:
                 data["ph"] = [hashed]
+        if partner and partner.id:
+            # external_id links server events to browser events (deduplication)
+            data["external_id"] = [self._hash_value(str(partner.id))]
+        if http_request is not None:
+            try:
+                # Prefer X-Forwarded-For header (behind proxy/nginx)
+                xff = getattr(http_request, "httprequest", http_request).environ.get(
+                    "HTTP_X_FORWARDED_FOR", ""
+                )
+                ip = (
+                    xff.split(",")[0].strip()
+                    if xff
+                    else (
+                        getattr(http_request, "httprequest", http_request).environ.get(
+                            "REMOTE_ADDR", ""
+                        )
+                    )
+                )
+                if ip:
+                    data["client_ip_address"] = ip
+                ua = getattr(http_request, "httprequest", http_request).environ.get(
+                    "HTTP_USER_AGENT", ""
+                )
+                if ua:
+                    data["client_user_agent"] = ua
+            except Exception as exc:  # noqa: BLE001
+                # Network context fields are best-effort; log at DEBUG only
+                _logger.debug("Meta CAPI: could not extract client IP/UA: %s", exc)
         return data
 
     @api.model
@@ -256,9 +306,7 @@ class FaynaMetaCapiService(models.AbstractModel):
                 bool(cfg["pixel_id"]),
                 cfg["enabled"],
             )
-            self._write_log(
-                event_name, event_id, "skipped", 0, None, None, reason, order
-            )
+            self._write_log(event_name, event_id, "skipped", 0, None, None, reason, order)
             return False
 
         event_payload = {
@@ -286,9 +334,7 @@ class FaynaMetaCapiService(models.AbstractModel):
             success = resp.status_code == 200
             status = "sent" if success else "failed"
             error = None if success else resp.text[:500]
-            _logger.info(
-                "Meta CAPI %s → %s (HTTP %s)", event_name, status, resp.status_code
-            )
+            _logger.info("Meta CAPI %s → %s (HTTP %s)", event_name, status, resp.status_code)
             self._write_log(
                 event_name,
                 event_id,
