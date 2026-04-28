@@ -7,6 +7,7 @@ they can never break the shop.
 
 import logging
 
+from odoo import http
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 from odoo.http import request
 
@@ -16,6 +17,7 @@ _logger = logging.getLogger(__name__)
 class FaynaMetaCapiWebsiteSale(WebsiteSale):
     """Inject ViewContent CAPI event on camp product page visits."""
 
+    @http.route(inherit=True)
     def product(self, product, category="", search="", **kwargs):
         response = super().product(product, category=category, search=search, **kwargs)
         try:
