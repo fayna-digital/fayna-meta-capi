@@ -9,6 +9,7 @@ Usage (from any Odoo context):
 """
 
 import hashlib
+import json
 import logging
 from datetime import datetime
 
@@ -255,7 +256,9 @@ class FaynaMetaCapiService(models.AbstractModel):
                 bool(cfg["pixel_id"]),
                 cfg["enabled"],
             )
-            self._write_log(event_name, event_id, "skipped", 0, reason, order)
+            self._write_log(
+                event_name, event_id, "skipped", 0, None, None, reason, order
+            )
             return False
 
         event_payload = {
@@ -270,12 +273,12 @@ class FaynaMetaCapiService(models.AbstractModel):
         if event_source_url:
             event_payload["event_source_url"] = event_source_url
 
-        payload: dict = {
-            "data": [event_payload],
-            "access_token": cfg["access_token"],
-        }
+        # Build payload without the access_token for logging (security: no token in logs)
+        payload_for_log: dict = {"data": [event_payload]}
         if cfg["test_event_code"]:
-            payload["test_event_code"] = cfg["test_event_code"]
+            payload_for_log["test_event_code"] = cfg["test_event_code"]
+
+        payload: dict = {**payload_for_log, "access_token": cfg["access_token"]}
 
         url = _GRAPH_URL.format(api_version=cfg["api_version"], pixel_id=cfg["pixel_id"])
         try:
@@ -286,7 +289,16 @@ class FaynaMetaCapiService(models.AbstractModel):
             _logger.info(
                 "Meta CAPI %s → %s (HTTP %s)", event_name, status, resp.status_code
             )
-            self._write_log(event_name, event_id, status, resp.status_code, error, order)
+            self._write_log(
+                event_name,
+                event_id,
+                status,
+                resp.status_code,
+                json.dumps(payload_for_log, ensure_ascii=False, default=str),
+                resp.text[:2000],
+                error,
+                order,
+            )
             return success
         except requests.RequestException as exc:
             msg = str(exc)[:500]
@@ -296,7 +308,16 @@ class FaynaMetaCapiService(models.AbstractModel):
                 event_name,
                 msg,
             )
-            self._write_log(event_name, event_id, "failed", 0, msg, order)
+            self._write_log(
+                event_name,
+                event_id,
+                "failed",
+                0,
+                json.dumps(payload_for_log, ensure_ascii=False, default=str),
+                None,
+                msg,
+                order,
+            )
             return False
 
     @api.model
@@ -306,6 +327,8 @@ class FaynaMetaCapiService(models.AbstractModel):
         event_id,
         status: str,
         http_status: int,
+        payload_json,
+        response_text,
         error,
         order=None,
     ) -> None:
@@ -315,6 +338,8 @@ class FaynaMetaCapiService(models.AbstractModel):
             "external_id": event_id,
             "status": status,
             "http_status": http_status,
+            "payload": payload_json,
+            "response": response_text,
             "error_message": error,
         }
         if order:

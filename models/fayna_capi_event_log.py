@@ -25,6 +25,8 @@ class FaynaCAPIEventLog(models.Model):
         index=True,
     )
     http_status = fields.Integer("HTTP status code")
+    payload = fields.Text("Request payload (JSON)")
+    response = fields.Text("Meta API response (JSON)")
     error_message = fields.Text("Error detail")
 
     sale_order_id = fields.Many2one("sale.order", ondelete="set null", index=True)

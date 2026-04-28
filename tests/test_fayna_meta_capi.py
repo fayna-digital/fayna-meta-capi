@@ -333,3 +333,107 @@ class TestSendEventGenericAPI(TestFaynaCAPIBase):
             mock_post.return_value = self._mock_response(200)
             result = svc.send_event("Purchase", user_data, custom_data, "https://example.com")
         self.assertTrue(result)
+
+
+# ── Test 18-20: payload + response stored in log ──────────────────────────────
+
+class TestLogPayloadAndResponse(TestFaynaCAPIBase):
+
+    def test_18_log_stores_payload_json_on_success(self):
+        """Log record must contain the JSON payload sent to Meta (without access_token)."""
+        import json as _json
+
+        order = self._make_order(email="payload@test.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200, '{"events_received": 1}')
+            order.action_confirm()
+
+        log = self.env["fayna.capi.event.log"].search(
+            [("sale_order_id", "=", order.id)], limit=1
+        )
+        self.assertTrue(log)
+        self.assertTrue(log.payload, "payload field must be set")
+        parsed = _json.loads(log.payload)
+        # access_token must NOT be stored in log (security)
+        self.assertNotIn("access_token", parsed)
+        # data array must contain the Purchase event
+        self.assertIn("data", parsed)
+        self.assertEqual(parsed["data"][0]["event_name"], "Purchase")
+
+    def test_19_log_stores_response_text_on_success(self):
+        """Log record must contain the raw response body from Meta API."""
+        order = self._make_order(email="response@test.com")
+        meta_response = '{"events_received": 1, "fbtrace_id": "ABC123"}'
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200, meta_response)
+            order.action_confirm()
+
+        log = self.env["fayna.capi.event.log"].search(
+            [("sale_order_id", "=", order.id)], limit=1
+        )
+        self.assertTrue(log)
+        self.assertEqual(log.response, meta_response)
+
+    def test_20_log_stores_payload_on_network_error(self):
+        """Even on network error, the payload we tried to send must be in the log."""
+        import json as _json
+        import requests as req_lib
+
+        order = self._make_order(email="neterr@test.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.side_effect = req_lib.ConnectionError("timeout")
+            order.action_confirm()
+
+        log = self.env["fayna.capi.event.log"].search(
+            [("sale_order_id", "=", order.id)], limit=1
+        )
+        self.assertTrue(log)
+        self.assertEqual(log.status, "failed")
+        self.assertTrue(log.payload, "payload must be stored even on network error")
+        parsed = _json.loads(log.payload)
+        self.assertNotIn("access_token", parsed)
+        self.assertIsNone(log.response)
+
+
+# ── Test 21: settings config round-trip ──────────────────────────────────────
+
+class TestSettingsConfigRoundTrip(TestFaynaCAPIBase):
+
+    def test_21_config_params_round_trip(self):
+        """ir.config_parameter values must survive write → read cycle."""
+        ICP = self.env["ir.config_parameter"].sudo()
+        ICP.set_param("fayna_meta_capi.pixel_id", "999888777666555")
+        ICP.set_param("fayna_meta_capi.access_token", "EAATestTokenRoundTrip")
+        ICP.set_param("fayna_meta_capi.test_event_code", "TESTRT42")
+        ICP.set_param("fayna_meta_capi.api_version", "v18.0")
+        ICP.set_param("fayna_meta_capi.enabled", "True")
+        try:
+            cfg = self.env["fayna.meta.capi"]._get_config()
+            self.assertEqual(cfg["pixel_id"], "999888777666555")
+            self.assertEqual(cfg["access_token"], "EAATestTokenRoundTrip")
+            self.assertEqual(cfg["test_event_code"], "TESTRT42")
+            self.assertEqual(cfg["api_version"], "v18.0")
+            self.assertTrue(cfg["enabled"])
+        finally:
+            ICP.set_param("fayna_meta_capi.pixel_id", "TEST_PIXEL_123")
+            ICP.set_param("fayna_meta_capi.access_token", "TEST_TOKEN_ABC")
+            ICP.set_param("fayna_meta_capi.test_event_code", "")
+            ICP.set_param("fayna_meta_capi.api_version", "v19.0")
+
+
+# ── Test 22: access_token never appears in URL ────────────────────────────────
+
+class TestSecurityInvariants(TestFaynaCAPIBase):
+
+    def test_22_access_token_not_in_request_url(self):
+        """access_token must go in JSON body only, never in the URL."""
+        order = self._make_order(email="sec@test.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            order.action_confirm()
+
+            url = mock_post.call_args[0][0]
+            self.assertNotIn("TEST_TOKEN_ABC", url)
+            # access_token must be present in body json
+            body = mock_post.call_args[1]["json"]
+            self.assertEqual(body["access_token"], "TEST_TOKEN_ABC")

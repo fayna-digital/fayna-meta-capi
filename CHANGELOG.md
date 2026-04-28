@@ -7,6 +7,26 @@ Versioning: Odoo `17.0.MAJOR.MINOR.PATCH`.
 
 ---
 
+## [17.0.2.0.0] — 2026-04-28
+
+### Added
+- `payload` field on `fayna.capi.event.log` — stores the JSON sent to Meta API
+  (without `access_token` — security invariant: token never written to DB logs).
+- `response` field on `fayna.capi.event.log` — stores the raw response body from Meta.
+- 5 new tests (18–22): payload/response stored correctly, round-trip config params,
+  access_token not in URL (security), payload stored even on network errors.
+- README rewritten in Ukrainian with full setup instructions, security notes,
+  event log description, and test instructions.
+
+### Changed
+- `_write_log()` now accepts `payload_json` and `response_text` parameters.
+- `_send_event_inner()` serialises payload (minus `access_token`) via `json.dumps`
+  before logging; on network error stores the payload we attempted to send.
+- Event log form view shows payload and response JSON sections (collapsible).
+- `i18n/uk_UA.po` + `i18n/pl_PL.po` updated with new field strings.
+
+---
+
 ## [17.0.1.0.0] — 2026-04-27
 
 ### Added

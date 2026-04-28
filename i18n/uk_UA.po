@@ -80,8 +80,16 @@ msgid "Order total"
 msgstr "Сума замовлення"
 
 #. module: fayna_meta_capi
+msgid "Meta API response (JSON)"
+msgstr "Відповідь Meta API (JSON)"
+
+#. module: fayna_meta_capi
 msgid "Pixel ID"
 msgstr "Pixel ID"
+
+#. module: fayna_meta_capi
+msgid "Request payload (JSON)"
+msgstr "Запит до Meta API (JSON)"
 
 #. module: fayna_meta_capi
 msgid "Pixel ID and Access Token must be set before testing."
