@@ -1,6 +1,6 @@
 {
     "name": "Fayna Meta Conversions API",
-    "version": "17.0.3.0.0",
+    "version": "17.0.3.1.0",
     "category": "Tools/Camp Management",
     "summary": "Meta Conversions API (server-side pixel) — Purchase/Lead/ViewContent events from Odoo",
     "description": """
@@ -29,7 +29,8 @@ TZ: fayna-digital-docs/contributing/CAMPSCOUT_MASTER_TZ.md §16 Phase 4
     "author": "Fayna Digital — Volodymyr Shevchenko",
     "website": "https://fayna.agency",
     "license": "LGPL-3",
-    "depends": ["base", "sale", "event", "website_sale", "base_setup", "fayna_camp_sales"],
+    "depends": ["base", "sale", "event", "website_sale", "base_setup", "fayna_camp_sales", "fayna_rodo_compliance"],
+    "external_dependencies": {"python": ["requests"]},
     "data": [
         "security/ir.model.access.csv",
         "data/ir_config_parameter.xml",
