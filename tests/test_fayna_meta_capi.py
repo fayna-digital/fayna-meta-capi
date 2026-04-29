@@ -586,3 +586,90 @@ class TestInitiateCheckoutEvent(TestFaynaCAPIBase):
             custom_data["content_ids"],
             [str(line.product_id.id) for line in order.order_line],
         )
+
+
+# ── Test 32–34: send_purchase (direct service call) ──────────────────────────
+
+
+class TestSendPurchaseDirect(TestFaynaCAPIBase):
+    def test_32_send_purchase_returns_true_on_http_200(self):
+        """send_purchase must return True when Meta API responds 200."""
+        order = self._make_order(email="purchase32@example.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            result = self.env["fayna.meta.capi"].send_purchase(order)
+        self.assertTrue(result)
+
+    def test_33_send_purchase_payload_contains_required_fields(self):
+        """Purchase payload must contain event_name, order_id, value, currency."""
+        order = self._make_order(email="purchase33@example.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            self.env["fayna.meta.capi"].send_purchase(order)
+
+        payload = mock_post.call_args[1]["json"]
+        event = payload["data"][0]
+        self.assertEqual(event["event_name"], "Purchase")
+        custom_data = event["custom_data"]
+        self.assertIn("order_id", custom_data)
+        self.assertIn("value", custom_data)
+        self.assertIn("currency", custom_data)
+        self.assertAlmostEqual(custom_data["value"], order.amount_total)
+        self.assertEqual(custom_data["currency"], order.currency_id.name)
+
+    def test_34_send_purchase_returns_false_when_no_pixel_id(self):
+        """send_purchase must return False (skip) when pixel_id is not configured."""
+        self.env["ir.config_parameter"].sudo().set_param("fayna_meta_capi.pixel_id", "")
+        try:
+            order = self._make_order(email="purchase34@example.com")
+            with patch(_PATCH) as mock_post:
+                result = self.env["fayna.meta.capi"].send_purchase(order)
+                mock_post.assert_not_called()
+            self.assertFalse(result)
+        finally:
+            self.env["ir.config_parameter"].sudo().set_param(
+                "fayna_meta_capi.pixel_id", "TEST_PIXEL_123"
+            )
+
+
+# ── Test 35–36: send_view_content (direct service call) ──────────────────────
+
+
+class TestSendViewContentDirect(TestFaynaCAPIBase):
+    def test_35_send_view_content_returns_true_on_http_200(self):
+        """send_view_content must return True when Meta API responds 200."""
+        partner = self.env["res.partner"].create(
+            {"name": "Viewer35", "email": "viewer35@campscout.eu"}
+        )
+        product = self.env["product.product"].create(
+            {"name": "Camp PSH 35", "type": "service", "list_price": 999.0}
+        )
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            result = self.env["fayna.meta.capi"].send_view_content(
+                partner, product, "https://campscout.eu/shop/cs-psh-35"
+            )
+        self.assertTrue(result)
+
+    def test_36_send_view_content_payload_contains_required_fields(self):
+        """ViewContent payload must contain event_name, content_ids, content_name."""
+        partner = self.env["res.partner"].create(
+            {"name": "Viewer36", "email": "viewer36@campscout.eu"}
+        )
+        product = self.env["product.product"].create(
+            {"name": "Camp PSH 36", "type": "service", "list_price": 1100.0}
+        )
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            self.env["fayna.meta.capi"].send_view_content(
+                partner, product, "https://campscout.eu/shop/cs-psh-36"
+            )
+
+        payload = mock_post.call_args[1]["json"]
+        event = payload["data"][0]
+        self.assertEqual(event["event_name"], "ViewContent")
+        custom_data = event["custom_data"]
+        self.assertIn("content_ids", custom_data)
+        self.assertIn("content_name", custom_data)
+        self.assertEqual(custom_data["content_ids"], [str(product.id)])
+        self.assertEqual(custom_data["content_name"], product.name)
