@@ -550,3 +550,39 @@ class TestAddToCartEvent(TestFaynaCAPIBase):
         self.assertIn("content_ids", custom_data)
         self.assertEqual(custom_data["content_ids"], [str(line.product_id.id)])
         self.assertEqual(custom_data["currency"], line.currency_id.name)
+
+
+# ── Test 30–31: InitiateCheckout event ───────────────────────────────────────
+
+
+class TestInitiateCheckoutEvent(TestFaynaCAPIBase):
+    def test_30_send_initiate_checkout_returns_true_on_200(self):
+        """send_initiate_checkout must return True when Meta API responds 200."""
+        order = self._make_order(email="checkout@example.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            result = self.env["fayna.meta.capi"].send_initiate_checkout(order)
+        self.assertTrue(result)
+
+    def test_31_send_initiate_checkout_payload_structure(self):
+        """InitiateCheckout payload must contain event_name, num_items, content_ids."""
+        order = self._make_order(email="checkout2@example.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            result = self.env["fayna.meta.capi"].send_initiate_checkout(order)
+
+        self.assertTrue(result)
+        call_args = mock_post.call_args
+        payload = call_args[1]["json"]
+        event = payload["data"][0]
+        self.assertEqual(event["event_name"], "InitiateCheckout")
+        custom_data = event["custom_data"]
+        self.assertIn("num_items", custom_data)
+        self.assertIn("content_ids", custom_data)
+        self.assertIn("value", custom_data)
+        self.assertIn("currency", custom_data)
+        self.assertEqual(custom_data["num_items"], len(order.order_line))
+        self.assertEqual(
+            custom_data["content_ids"],
+            [str(line.product_id.id) for line in order.order_line],
+        )

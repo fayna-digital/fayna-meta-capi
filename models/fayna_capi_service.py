@@ -175,6 +175,45 @@ class FaynaMetaCapiService(models.AbstractModel):
             return False
 
     @api.model
+    def send_initiate_checkout(self, order) -> bool:
+        """Send InitiateCheckout CAPI event when user starts checkout.
+
+        Fired when a portal user begins the checkout flow for an order
+        (e.g. reaching the payment/confirmation step).  Mirrors the
+        AddToCart pattern: order-level event, not per-line.
+
+        Args:
+            order: sale.order record at the start of checkout.
+        Returns:
+            True on HTTP-200, False otherwise (including disabled/skip).
+        """
+        try:
+            partner = order.partner_id
+            event_id = f"initiate_checkout_{order.id}_{int(fields.Datetime.now().timestamp())}"
+            user_data = self._build_user_data(partner)
+            custom_data = {
+                "currency": order.currency_id.name,
+                "value": float(order.amount_total),
+                "num_items": len(order.order_line),
+                "content_ids": [str(line.product_id.id) for line in order.order_line],
+                "content_type": "product",
+            }
+            return self._send_event_inner(
+                "InitiateCheckout",
+                user_data,
+                custom_data,
+                event_source_url="",
+                event_id=event_id,
+                order=order,
+            )
+        except Exception:
+            _logger.exception(
+                "Meta CAPI send_initiate_checkout failed for order %s",
+                order.name if order else "unknown",
+            )
+            return False
+
+    @api.model
     def action_send_test_event(self) -> dict:
         """Wizard-style button: send a test ViewContent event and return result notification."""
         cfg = self._get_config()
@@ -448,6 +487,9 @@ class FaynaCAPIService:
 
     def send_purchase(self, order):
         return self._svc.send_purchase(order)
+
+    def send_initiate_checkout(self, order):
+        return self._svc.send_initiate_checkout(order)
 
     def _build_user_data(self, partner):
         return self._svc._build_user_data(partner)

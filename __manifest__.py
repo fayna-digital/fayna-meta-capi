@@ -1,6 +1,6 @@
 {
     "name": "Fayna Meta Conversions API",
-    "version": "17.0.3.1.1",
+    "version": "17.0.3.1.2",
     "category": "Tools/Camp Management",
     "summary": "Meta Conversions API (server-side pixel) — Purchase/Lead/ViewContent events from Odoo",
     "description": """
