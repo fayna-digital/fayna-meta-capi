@@ -169,9 +169,7 @@ class FaynaMetaCapiService(models.AbstractModel):
                 event_id=event_id,
             )
         except Exception:
-            _logger.exception(
-                "Meta CAPI send_add_to_cart failed for order_line %s", order_line.id
-            )
+            _logger.exception("Meta CAPI send_add_to_cart failed for order_line %s", order_line.id)
             return False
 
     @api.model

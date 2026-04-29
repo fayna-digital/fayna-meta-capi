@@ -498,9 +498,7 @@ class TestRetryCron(TestFaynaCAPIBase):
 
 class TestAddToCartEvent(TestFaynaCAPIBase):
     def _make_order_line(self, email="atc@example.com"):
-        partner = self.env["res.partner"].create(
-            {"name": "ATC Partner", "email": email}
-        )
+        partner = self.env["res.partner"].create({"name": "ATC Partner", "email": email})
         product = self.env["product.product"].create(
             {"name": "Camp Slot", "type": "service", "list_price": 750.0}
         )
