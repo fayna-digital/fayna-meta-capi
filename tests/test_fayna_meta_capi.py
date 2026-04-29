@@ -491,3 +491,62 @@ class TestRetryCron(TestFaynaCAPIBase):
             self.env["fayna.capi.event.log"].cron_retry_failed_events()
             # Must not have been called — already at max retries
             mock_post2.assert_not_called()
+
+
+# ── Test 27–29: AddToCart event ───────────────────────────────────────────────
+
+
+class TestAddToCartEvent(TestFaynaCAPIBase):
+    def _make_order_line(self, email="atc@example.com"):
+        partner = self.env["res.partner"].create(
+            {"name": "ATC Partner", "email": email}
+        )
+        product = self.env["product.product"].create(
+            {"name": "Camp Slot", "type": "service", "list_price": 750.0}
+        )
+        order = self.env["sale.order"].create({"partner_id": partner.id})
+        line = self.env["sale.order.line"].create(
+            {
+                "order_id": order.id,
+                "product_id": product.id,
+                "product_uom_qty": 1,
+                "price_unit": 750.0,
+            }
+        )
+        return line
+
+    def test_27_send_add_to_cart_returns_true_on_200(self):
+        """send_add_to_cart must return True when Meta API responds 200."""
+        line = self._make_order_line()
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            result = self.env["fayna.meta.capi"].send_add_to_cart(line)
+        self.assertTrue(result)
+
+    def test_28_send_add_to_cart_creates_log_with_event_name(self):
+        """send_add_to_cart must create a log record with event_name='AddToCart'."""
+        line = self._make_order_line(email="atc2@example.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            self.env["fayna.meta.capi"].send_add_to_cart(line)
+
+        log = self.env["fayna.capi.event.log"].search(
+            [("event_name", "=", "AddToCart")], order="id desc", limit=1
+        )
+        self.assertTrue(log, "Log record must be created for AddToCart event")
+        self.assertEqual(log.status, "sent")
+        self.assertEqual(log.event_name, "AddToCart")
+
+    def test_29_send_add_to_cart_payload_contains_product_id(self):
+        """AddToCart payload must include content_ids with the product id."""
+        line = self._make_order_line(email="atc3@example.com")
+        with patch(_PATCH) as mock_post:
+            mock_post.return_value = self._mock_response(200)
+            self.env["fayna.meta.capi"].send_add_to_cart(line)
+
+        call_args = mock_post.call_args
+        payload = call_args[1]["json"]
+        custom_data = payload["data"][0]["custom_data"]
+        self.assertIn("content_ids", custom_data)
+        self.assertEqual(custom_data["content_ids"], [str(line.product_id.id)])
+        self.assertEqual(custom_data["currency"], line.currency_id.name)

@@ -144,6 +144,37 @@ class FaynaMetaCapiService(models.AbstractModel):
             return False
 
     @api.model
+    def send_add_to_cart(self, order_line) -> bool:
+        """Send AddToCart event when a product is added to the shopping cart.
+
+        Args:
+            order_line: sale.order.line record that was just added.
+        """
+        try:
+            partner = order_line.order_id.partner_id
+            event_id = f"atc_{order_line.id}_{int(fields.Datetime.now().timestamp())}"
+            user_data = self._build_user_data(partner)
+            custom_data = {
+                "currency": order_line.currency_id.name,
+                "value": float(order_line.price_subtotal),
+                "content_ids": [str(order_line.product_id.id)],
+                "content_name": order_line.product_id.name or "",
+                "content_type": "product",
+            }
+            return self._send_event_inner(
+                "AddToCart",
+                user_data,
+                custom_data,
+                event_source_url="",
+                event_id=event_id,
+            )
+        except Exception:
+            _logger.exception(
+                "Meta CAPI send_add_to_cart failed for order_line %s", order_line.id
+            )
+            return False
+
+    @api.model
     def action_send_test_event(self) -> dict:
         """Wizard-style button: send a test ViewContent event and return result notification."""
         cfg = self._get_config()
