@@ -15,3 +15,13 @@ htmlcov/
 .venv/
 venv/
 uv.lock
+
+# Secrets — #4ZONES (ніколи не комітити токени Meta CAPI / ключі)
+.env
+.env.*
+*.key
+*.pem
+*.crt
+*_token*
+credentials*
+secrets*

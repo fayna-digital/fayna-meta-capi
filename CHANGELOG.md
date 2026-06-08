@@ -7,6 +7,43 @@ Versioning: Odoo `17.0.MAJOR.MINOR.PATCH`.
 
 ---
 
+## [Unreleased]
+
+### Docs only
+- Added `CLAUDE.md` with `#4ZONES` banner, module purpose, deps, deploy commands, boundaries.
+- Rewrote `docs/TZ.md` into the 6 spec-driven REPO_STANDARD areas (Objective, Commands,
+  Project Structure, Code Style, Testing, Boundaries) + Success Criteria + Open Questions,
+  preserving historical milestones.
+- Added `docs/PLAN.md` (dependency graph + phases + checkpoints).
+- Backfilled CHANGELOG entries up to `17.0.3.1.3`.
+- `.gitignore` now ignores secrets (`.env`, `*.key`, `*.pem`, `*.crt`, `*_token*`,
+  `credentials*`, `secrets*`).
+- README + LICENSE confirmed conformant to REPO_STANDARD.
+
+---
+
+## [17.0.3.1.3]
+
+### Added
+- **AddToCart** event — `send_add_to_cart(order_line)`: order-line-level conversion event.
+- **InitiateCheckout** event — `send_initiate_checkout(order)`: fired at start of checkout flow.
+- Retry subsystem on `fayna.capi.event.log`: `retry_count` + `next_retry_at` fields,
+  `action_retry_failed()` (single record) and `cron_retry_failed_events()` (bulk).
+- `data/cron_retry.xml` — `ir.cron` retrying failed events every 30 min, max 3 attempts
+  (`_MAX_RETRIES`), `noupdate=1` to keep admin customisation after upgrade.
+- Sale-order linkage on the event log: `sale_order_id`, `order_amount`, `currency_code`.
+
+### Changed
+- `_send_event_inner()` accepts an optional `order` to attach order context to the log.
+- Manifest dependencies extended: `event`, `base_setup`, `fayna_camp_sales`,
+  `fayna_rodo_compliance`.
+
+### Notes
+- Module remains **Production-ready** but **inert** (feature flag `False`) until the
+  Phase 4 production gate (all stack modules on Hetzner staging + human QA green).
+
+---
+
 ## [17.0.2.0.0] — 2026-04-28
 
 ### Added

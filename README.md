@@ -5,7 +5,7 @@
 ![Phase](https://img.shields.io/badge/Phase-4-orange)
 ![License](https://img.shields.io/badge/License-LGPL--3-green.svg)
 ![Status](https://img.shields.io/badge/Status-Production--ready-brightgreen)
-![Version](https://img.shields.io/badge/Version-17.0.2.0.0-blue)
+![Version](https://img.shields.io/badge/Version-17.0.3.1.3-blue)
 
 **Розроблено [Fayna Digital](https://www.fayna.agency) для платформи CampScout.**
 **Автор: Volodymyr Shevchenko**
@@ -32,6 +32,8 @@
 | **Purchase** | Підтвердження замовлення (`sale.order.action_confirm`) |
 | **Lead** | Відправка форми звернення (`camp.support.request.action_submit`) |
 | **ViewContent** | Перегляд сторінки товару на сайті (`/shop/<product>`) |
+| **AddToCart** | Додавання товару в кошик (`send_add_to_cart`, публічний API) |
+| **InitiateCheckout** | Початок оформлення (`send_initiate_checkout`, публічний API) |
 
 ---
 
@@ -39,7 +41,7 @@
 
 ```
 fayna_meta_capi/
-├── __manifest__.py                        # залежності, версія 17.0.2.0.0
+├── __manifest__.py                        # залежності, версія 17.0.3.1.3
 ├── models/
 │   ├── fayna_capi_service.py              # AbstractModel "fayna.meta.capi"
 │   │                                      # send_purchase / send_lead / send_view_content
@@ -57,7 +59,7 @@ fayna_meta_capi/
 ├── i18n/uk_UA.po                          # переклад українською
 ├── i18n/pl_PL.po                          # переклад польською
 ├── tests/
-│   ├── test_fayna_meta_capi.py            # 22 тести (мок requests.post)
+│   ├── test_fayna_meta_capi.py            # 36 тестів (мок requests.post)
 │   └── test_scaffold.py                   # 5 smoke-тестів встановлення
 ├── docs/TZ.md
 ├── .github/workflows/ci.yml
@@ -134,7 +136,17 @@ docker exec campscout_web odoo -c /etc/odoo/odoo.conf -d campscout \
     --test-enable --stop-after-init --no-http -u fayna_meta_capi
 ```
 
-27 тестів (22 основних + 5 smoke). Всі HTTP-виклики мокуються — мережа не потрібна.
+41 тести (36 основних + 5 smoke). Всі HTTP-виклики мокуються — мережа не потрібна.
+
+---
+
+## Документація
+
+- [CLAUDE.md](CLAUDE.md) — як працювати з репо (#4ZONES, deploy, conventions)
+- [docs/TZ.md](docs/TZ.md) — технічне завдання (6 областей за REPO_STANDARD)
+- [docs/PLAN.md](docs/PLAN.md) — dependency graph + фази + checkpoints
+- [CHANGELOG.md](CHANGELOG.md) — історія змін
+- Master TZ: `CAMPSCOUT_MASTER_TZ.md §16 Phase 4`
 
 ---
 
