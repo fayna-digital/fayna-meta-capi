@@ -1,4 +1,4 @@
-# fayna_meta_capi — Meta Conversions API для Odoo 17
+# fayna_meta_capi — Meta Conversions API dla Odoo 17
 
 ![Odoo Version](https://img.shields.io/badge/Odoo-17.0%20Community-purple)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
@@ -7,60 +7,89 @@
 ![Status](https://img.shields.io/badge/Status-Production--ready-brightgreen)
 ![Version](https://img.shields.io/badge/Version-17.0.3.1.3-blue)
 
-**Розроблено [Fayna Digital](https://www.fayna.agency) для платформи CampScout.**
-**Автор: Volodymyr Shevchenko**
+**Opracowane przez [Fayna Digital](https://www.fayna.agency) dla platformy CampScout.**
+**Autor: Volodymyr Shevchenko**
 
 ---
 
-## Що це і навіщо
+## Co to jest i po co
 
-Модуль надсилає конверсії з Odoo напряму до Meta (Facebook/Instagram) через **Conversions API (CAPI)** — серверний піксель.
+Moduł wysyła konwersje z Odoo bezpośrednio do Meta (Facebook/Instagram) przez **Conversions API (CAPI)** — piksel po stronie serwera.
 
-Чому це краще за звичайний браузерний піксель:
-- **Не блокується** AdBlock, uBlock Origin, Brave Shield
-- **Працює після iOS 14.5+** (Apple обмежила трекінг браузерами)
-- **Точніші дані** для оптимізації реклами — Meta бачить продажі, а не кліки
+Dlaczego to lepsze niż zwykły piksel przeglądarkowy:
+- **Nie jest blokowany** przez AdBlock, uBlock Origin, Brave Shield
+- **Działa po iOS 14.5+** (Apple ograniczyło śledzenie przez przeglądarki)
+- **Dokładniejsze dane** do optymalizacji reklam — Meta widzi sprzedaż, a nie kliknięcia
 
-Модуль є частиною **Phase 4** плану декомпозиції CampScout (`CAMPSCOUT_MASTER_TZ.md §16`).
-
----
-
-## Що відстежується
-
-| Подія | Коли спрацьовує |
-|---|---|
-| **Purchase** | Підтвердження замовлення (`sale.order.action_confirm`) |
-| **Lead** | Відправка форми звернення (`camp.support.request.action_submit`) |
-| **ViewContent** | Перегляд сторінки товару на сайті (`/shop/<product>`) |
-| **AddToCart** | Додавання товару в кошик (`send_add_to_cart`, публічний API) |
-| **InitiateCheckout** | Початок оформлення (`send_initiate_checkout`, публічний API) |
+Moduł jest częścią **Phase 4** planu dekompozycji CampScout (`CAMPSCOUT_MASTER_TZ.md §16`).
 
 ---
 
-## Архітектура
+## Co faktycznie robi ten kod
+
+Poniższy opis pochodzi z bezpośredniej analizy plików (`models/`, `controllers/`, `data/`, `tests/`).
+
+### Serwis (`models/fayna_capi_service.py`, 498 linii)
+
+`fayna.meta.capi` to **AbstractModel** — żyje wewnątrz env Odoo i można go wywołać z dowolnego modelu przez `self.env["fayna.meta.capi"]`. Publiczne API:
+- `send_event(event_name, user_data, custom_data, event_source_url, event_id)` — wysyła jedną konwersję; zwraca `True` przy HTTP-200, `False` w przeciwnym razie (w tym przy wyłączonym/skip). **NIGDY nie rzuca wyjątków** — wywołujący nie muszą nic łapać.
+- `send_purchase(order)` — zdarzenie **Purchase**.
+- `send_lead(partner, source_url)` — zdarzenie **Lead**.
+- `send_view_content(partner, product, source_url)` — zdarzenie **ViewContent**.
+
+Wszystkie wywołania HTTP są odizolowane za `requests.post` do `https://graph.facebook.com/{api_version}/{pixel_id}/events`; testy mockują ten pojedynczy symbol.
+
+### Zdarzenia i hooki
+
+| Zdarzenie | Kiedy odpala | Hook w kodzie |
+|---|---|---|
+| **Purchase** | Potwierdzenie zamówienia | `models/sale_order.py` — hook na `action_confirm` |
+| **Lead** | Wysłanie formularza zapytania | `models/camp_support_request.py` — hook na `action_submit` (wymaga `fayna_camp_sales`) |
+| **ViewContent** | Otwarcie strony produktu | `controllers/website_sale.py` — hook na `/shop/<product>` |
+
+### Retry (`data/cron_retry.xml`)
+
+Moduł zawiera cron retry dla nieudanych wysyłek (przejściowe błędy sieci / odpowiedzi Meta).
+
+### Bezpieczeństwo
+
+- `access_token` przechowywany w `ir.config_parameter` (admin-only, nie wyświetlany w UI przez `password="True"`).
+- Do dziennika zdarzeń (`fayna.capi.event.log`) **token nie jest zapisywany** — tylko payload bez `access_token`.
+- SHA-256 hashowanie emaila i telefonu przed wysłaniem do Meta.
+- Dziennik dostępny tylko dla administratorów (`base.group_system`).
+
+### Feature flag
+
+Moduł instaluje się **inertnie** (`fayna_meta_capi.enabled`, domyślnie `False`). Żadnej zmiany zachowania do jawnego włączenia przez **Settings → Meta CAPI**.
+
+---
+
+## Struktura repozytorium
 
 ```
 fayna_meta_capi/
-├── __manifest__.py                        # залежності, версія 17.0.3.1.3
+├── __manifest__.py                        # zależności, wersja 17.0.3.1.3, LGPL-3
 ├── models/
 │   ├── fayna_capi_service.py              # AbstractModel "fayna.meta.capi"
-│   │                                      # send_purchase / send_lead / send_view_content
-│   ├── fayna_capi_event_log.py            # модель "fayna.capi.event.log" — журнал
-│   ├── res_config_settings.py             # поля у Налаштуваннях Odoo
-│   ├── sale_order.py                      # hook на action_confirm → Purchase
-│   └── camp_support_request.py            # hook на action_submit → Lead (потребує fayna_camp_sales)
+│   │                                      #   send_purchase / send_lead / send_view_content
+│   ├── fayna_capi_event_log.py            # model "fayna.capi.event.log" — dziennik
+│   ├── res_config_settings.py             # pola w Ustawieniach Odoo
+│   ├── sale_order.py                      # hook na action_confirm → Purchase
+│   └── camp_support_request.py            # hook na action_submit → Lead (wymaga fayna_camp_sales)
 ├── controllers/
-│   └── website_sale.py                    # hook на /shop/<product> → ViewContent
+│   └── website_sale.py                    # hook na /shop/<product> → ViewContent
 ├── views/
-│   ├── fayna_capi_settings_views.xml      # блок у Налаштуваннях (admin-only)
-│   └── fayna_capi_event_log_views.xml     # журнал подій (tree + form + search + menu)
-├── data/ir_config_parameter.xml           # початкові значення параметрів (enabled=False)
-├── security/ir.model.access.csv           # доступ до журналу (admin rw, user ro)
-├── i18n/uk_UA.po                          # переклад українською
-├── i18n/pl_PL.po                          # переклад польською
+│   ├── fayna_capi_settings_views.xml      # blok w Ustawieniach (admin-only)
+│   └── fayna_capi_event_log_views.xml     # dziennik zdarzeń (tree + form + search + menu)
+├── data/
+│   ├── ir_config_parameter.xml            # początkowe wartości parametrów (enabled=False)
+│   └── cron_retry.xml                     # cron retry nieudanych wysyłek
+├── security/ir.model.access.csv           # dostęp do dziennika (admin rw, user ro)
+├── i18n/uk_UA.po                          # tłumaczenie ukraińskie
+├── i18n/pl_PL.po                          # tłumaczenie polskie
 ├── tests/
-│   ├── test_fayna_meta_capi.py            # 36 тестів (мок requests.post)
-│   └── test_scaffold.py                   # 5 smoke-тестів встановлення
+│   ├── test_fayna_meta_capi.py            # 36 testów (mock requests.post)
+│   └── test_scaffold.py                   # 5 smoke-testów instalacji
 ├── docs/TZ.md
 ├── .github/workflows/ci.yml
 ├── .pre-commit-config.yaml
@@ -69,7 +98,7 @@ fayna_meta_capi/
 
 ---
 
-## Встановлення
+## Instalacja
 
 ```bash
 cd /opt/campscout/custom-addons
@@ -81,79 +110,59 @@ docker exec campscout_web odoo -c /etc/odoo/odoo.conf -d campscout \
 docker restart campscout_web
 ```
 
-Модуль встановлюється **інертним** (feature flag `False`). Жодної зміни поведінки до явного увімкнення.
+Moduł instaluje się **inertnie** (feature flag `False`). Żadnej zmiany zachowania do jawnego włączenia.
 
 ---
 
-## Налаштування
+## Konfiguracja
 
-Відкрити: **Налаштування → Meta CAPI**
+Otwórz: **Ustawienia → Meta CAPI**
 
-| Поле | Де знайти у Meta |
+| Pole | Gdzie znaleźć w Meta |
 |---|---|
-| **Pixel ID** | Events Manager → Data Sources → <ваш піксель> → Settings |
+| **Pixel ID** | Events Manager → Data Sources → <twój piksel> → Settings |
 | **Access Token** | Events Manager → Settings → Conversions API → Generate Access Token |
-| **Test Event Code** | Events Manager → Test Events (тільки для тестування, на проді — порожньо) |
-| **API Version** | За замовчуванням `v19.0` |
+| **Test Event Code** | Events Manager → Test Events (tylko do testów, na prodzie — puste) |
+| **API Version** | Domyślnie `v19.0` |
 
-Після збереження — натиснути **"Надіслати тестову подію"** і перевірити у вкладці Test Events у Meta Events Manager (може зайняти до 60 секунд).
-
----
-
-## Безпека
-
-- `access_token` зберігається в `ir.config_parameter` (admin-only, не відображається в UI через `password="True"`)
-- У журнал подій (`fayna.capi.event.log`) **токен не пишеться** — зберігається лише payload без `access_token`
-- SHA-256 хешування email і телефону перед передачею до Meta
-- Журнал доступний тільки адміністраторам (`base.group_system`)
+Po zapisaniu — kliknij **"Wyślij zdarzenie testowe"** i sprawdź w zakładce Test Events w Meta Events Manager (może zająć do 60 sekund).
 
 ---
 
-## Журнал подій
+## Dziennik zdarzeń
 
-**Налаштування → Технічне → Meta CAPI → Журнал подій**
+**Ustawienia → Techniczne → Meta CAPI → Dziennik zdarzeń**
 
-Кожен виклик до Meta API фіксується:
+Każde wywołanie do Meta API jest rejestrowane:
 
-| Поле | Зміст |
+| Pole | Zawartość |
 |---|---|
-| Дата | Коли відправлено |
-| Подія | Purchase / Lead / ViewContent |
-| Статус | `sent` / `failed` / `skipped` |
-| HTTP код | 200 = успіх, 4xx/5xx = помилка Meta |
-| Замовлення | Посилання на `sale.order` (якщо є) |
-| Payload (JSON) | Що саме відправлено до Meta |
-| Відповідь Meta (JSON) | Що Meta повернула |
-| Деталі помилки | Текст помилки (якщо є) |
+| Data | Kiedy wysłano |
+| Zdarzenie | Purchase / Lead / ViewContent |
+| Status | `sent` / `failed` / `skipped` |
+| Kod HTTP | 200 = sukces, 4xx/5xx = błąd Meta |
+| Zamówienie | Link do `sale.order` (jeśli jest) |
+| Payload (JSON) | Co dokładnie wysłano do Meta |
+| Odpowiedź Meta (JSON) | Co Meta zwróciła |
+| Szczegóły błędu | Tekst błędu (jeśli jest) |
 
 ---
 
-## Тести
+## Testy
 
 ```bash
-# Запустити на staging:
+# Uruchom na staging:
 docker exec campscout_web odoo -c /etc/odoo/odoo.conf -d campscout \
     --test-enable --stop-after-init --no-http -u fayna_meta_capi
 ```
 
-41 тести (36 основних + 5 smoke). Всі HTTP-виклики мокуються — мережа не потрібна.
+41 testów (36 głównych + 5 smoke). Wszystkie wywołania HTTP są mockowane — sieć nie jest potrzebna.
 
 ---
 
-## Документація
+## Dokumentacja
 
-- [CLAUDE.md](CLAUDE.md) — як працювати з репо (#4ZONES, deploy, conventions)
-- [docs/TZ.md](docs/TZ.md) — технічне завдання (6 областей за REPO_STANDARD)
-- [docs/PLAN.md](docs/PLAN.md) — dependency graph + фази + checkpoints
-- [CHANGELOG.md](CHANGELOG.md) — історія змін
+- [docs/TZ.md](docs/TZ.md) — techniczne zadanie
+- [docs/PLAN.md](docs/PLAN.md) — graf zależności + fazy + checkpointy
+- [CHANGELOG.md](CHANGELOG.md) — historia zmian
 - Master TZ: `CAMPSCOUT_MASTER_TZ.md §16 Phase 4`
-
----
-
-## Ліцензія
-
-LGPL-3 — see [LICENSE](LICENSE).
-
----
-
-*Розроблено [Fayna Digital](https://www.fayna.agency) · Volodymyr Shevchenko*
