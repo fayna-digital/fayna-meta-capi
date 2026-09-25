@@ -102,7 +102,7 @@ fayna_meta_capi/
 
 ```bash
 cd /opt/campscout/custom-addons
-sudo -u \#1000 git clone https://github.com/VladSh77/fayna-meta-capi.git fayna_meta_capi
+sudo -u \#1000 git clone https://github.com/fayna-digital/fayna-meta-capi.git fayna_meta_capi
 
 docker exec campscout_web odoo -c /etc/odoo/odoo.conf -d campscout \
     -i fayna_meta_capi --stop-after-init --no-http
